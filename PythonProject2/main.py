@@ -1,6 +1,13 @@
 import sys
 from proce import *
 from lw import *
+from sw import *
+from add import *
+from addi import *
+from sub import *
+from beq import *
+from and_ import *
+from or_ import *
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 
 if __name__ == '__main__':
@@ -13,14 +20,16 @@ if __name__ == '__main__':
 
     procesador = Procesador(intv= interval)
 
-    # Setup: x2 = 10, memoria[14] = 99
-    procesador.regFile.reg[2] = 10
-    procesador.dataMem.memory[14] = 99
+    procesador.regFile.reg[5] = 0b1100  # x5 = 12
+    procesador.regFile.reg[6] = 0b1010  # x6 = 10
 
-    procesador.loadInstr(LW(rd=1, imm=4, rs1=2, proce=procesador))
+    procesador.loadInstr(AND(7, 5, 6, procesador))
     procesador.execute()
 
 
     window.show()
 
     sys.exit(app.exec())
+
+#ya está: sw, lw, add, addi, sub, beq, or, and
+#TODO: otras 2 instrucciones

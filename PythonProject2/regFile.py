@@ -1,3 +1,3 @@
 class regFile:
     def __init__(self):
-        self.reg = [None]*32
+        self.reg = [0]*32
