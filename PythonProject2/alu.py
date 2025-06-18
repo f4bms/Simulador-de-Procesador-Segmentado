@@ -11,5 +11,7 @@ class ALU:
             return A & B
         elif op == 3:
             return A | B
+        elif op == 4:
+            return A ^ B
         else:
             raise ValueError("No se reconoce la operacion")
