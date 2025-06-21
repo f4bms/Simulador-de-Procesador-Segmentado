@@ -4,35 +4,27 @@ class ADDI:
         self.rs1 = rs1
         self.imm = imm
         self.proce = proce
+
         self.steps = [self.step1, self.step2, self.step3]
-        self.result = None  # Para forwarding
 
     def step1(self):
         print("empezando addi")
-        self.op1 = self.proce.regFile.reg[self.rs1]
-        print(f"ADDI: [ID] op1={self.op1}, imm={self.imm}")
+        self.proce.regRegFile.data = self.proce.regFile.reg[self.rs1]
+        print("ADDI: ", self.proce.regRegFile.data)
 
     def step2(self):
-        self.result = self.proce.alu.OP(self.op1, self.imm, 0)
-        print(f"ADDI:[EX] res={self.result}")
+        if self.proce.regRegFile.data is None:
+            raise ValueError(f"El registro {self.rs1} tiene un valor None y no puede sumarse.")
+        self.proce.alu_reg.data = self.proce.alu.OP(self.proce.regRegFile.data, self.imm, 0)
+        print("ADDI:[EX]: ", self.proce.alu_reg.data)
 
     def step3(self):
-        self.proce.regFile.reg[self.rd] = self.result
-        print(f"ADDI:[WB] x{self.rd} <- {self.result}\nADDI terminada")
+        self.proce.regFile.reg[self.rd] = self.proce.alu_reg.data
+        print(f"ADDI:[WB] x{self.rd} <- {self.proce.alu_reg.data}")
 
     def execute(self):
         if self.steps:
-            fase = self.steps.pop(0)
+            fase =self.steps.pop(0)
             fase()
             if not self.steps:
                 print("ADDI terminada")
-
-    # Métodos para hazard unit
-    def uses_rs(self):
-        return True
-    
-    def uses_rt(self):
-        return False
-    
-    def modifies_rd(self):
-        return True
