@@ -26,16 +26,62 @@ class Procesador:
         self.pipel_stage = ["", "", "", "", ""]
         self.time = 1
 
+        #Modos de ejecución
+        self.running = False
+        self.execution_mode = "complete"
+        self.cycle_time = 1.0
+        self.step_event = threading.Event()
+        self.stop_event = threading.Event()
+
     def loadInstr(self, instr):
         self.intrMem.memory.append(instr)
+    
+    def set_execution_mode(self, mode, cycle_time=1.0):
+        valid_modes = ["complete", "step", "timed"]
+        if mode not in valid_modes:
+            raise ValueError(f"Modo inválido. Debe ser uno de {valid_modes}")
+        self.execution_mode = mode
+        self.cycle_time = cycle_time
 
-    def execute(self):
-        start = True
-        timer = time.time()
-        while start:
+    def start_execution(self):
+        self.running = True
+        self.stop_event.clear()
+
+        if self.execution_mode == "complete":
+            self.execute_complete()
+        elif self.execution_mode == "step":
+            pass
+        elif self.execution_mode == "timed":
+            threading.Thread(target=self.execute_timed, daemon=True).start()
+    
+    def stop_execution(self):
+        self.running = False
+        self.stop_event.set()
+    
+    def step(self):
+        if self.execution_mode == "step" and self.running:
+            self.step_event.set()
+    
+    def execute_complete(self):
+        self.execute(complete=True)
+    
+    def execute_timed(self):
+        while self.running and not self.stop_event.is_set():
+            start_time = time.time()
+            self.execute()
+
+            elapsed = time.time() - start_time
+            sleep_time = max(0, self.cycle_time - elapsed)
+            time.sleep(sleep_time)
+
+    def execute(self, complete=False):
+        while True:
+            if not complete and self.execution_mode == "step":
+                self.step_event.wait()
+                self.step_event.clear()
+            
             self.cycles += 1
             start = False
-
 
             #wb
             if self.reg_data.instr is not None:
@@ -96,17 +142,7 @@ class Procesador:
             else:
                 cpi = ipc = clock_rate = 0
 
+            if not complete or not start or self.stop_event.is_set():
+                break
+
             #todo esto meter a la parte grafica
-
-
-
-
-    
-
-
-
-
-
-
-
-
