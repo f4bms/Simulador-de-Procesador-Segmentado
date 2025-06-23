@@ -13,6 +13,8 @@ from andi import *
 
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QFileDialog, QMessageBox
+from PyQt6.QtGui import QAction
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -23,17 +25,16 @@ class MainWindow(QtWidgets.QMainWindow):
         # Configuración inicial
         self.interval = 1.0
         self.procesador = Procesador(intv=self.interval)
-        self.procesador.regFile.reg[5] = 0b1100
         
-        # Cargar instrucciones de ejemplo
-        self.load_sample_instructions()
+        # Configurar menú
+        self.setup_menu()
         
         # Conectar botones
         self.exeCompleteButton.clicked.connect(self.execute_complete)
         self.exeTimerButton.clicked.connect(self.execute_timed)
         self.exeStepsButton.clicked.connect(self.start_step_mode)
         self.stepButton.clicked.connect(self.execute_step)
-        self.pushButton.clicked.connect(self.show_memory)
+        self.memoryButton.clicked.connect(self.show_memory)
         
         # Configurar selector de tiempo
         self.timeSelector.setValue(1.0)
@@ -42,19 +43,186 @@ class MainWindow(QtWidgets.QMainWindow):
         # Timer para actualización de la interfaz
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_ui)
-        self.update_timer.start(100)  # Actualizar cada 100ms
+        self.update_timer.start(100)
         
-        # Estado inicial
-        self.step_mode = False
         self.update_ui()
+
+    def setup_menu(self):
+        """Configura la barra de menú con opciones de archivo"""
+        from PyQt6.QtGui import QAction  # Importar desde el módulo correcto
+        
+        menubar = self.menubar
+        
+        # Menú Archivo
+        file_menu = menubar.addMenu("&Archivo")
+        
+        # Acción para cargar instrucciones
+        load_action = QAction("&Cargar instrucciones", self)
+        load_action.setShortcut("Ctrl+O")
+        load_action.triggered.connect(self.load_instructions_from_file)
+        file_menu.addAction(load_action)
+        
+        # Acción para salir
+        exit_action = QAction("&Salir", self)
+        exit_action.setShortcut("Ctrl+Q")
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
 
     def load_sample_instructions(self):
         """Carga instrucciones de ejemplo en el procesador"""
         self.procesador.loadInstr(ANDI(6, 5, 0b1010, self.procesador))
-        # Agregar más instrucciones de ejemplo si es necesario
-        # self.procesador.loadInstr(ADD(7, 6, 5, self.procesador))
-        # self.procesador.loadInstr(SW(7, 0, 10, self.procesador))
 
+
+    def load_instructions_from_file(self):
+        """Abre un diálogo para seleccionar y cargar un archivo de instrucciones"""
+        # Versión corregida para PyQt6
+        file_name, _ = QFileDialog.getOpenFileName(
+            parent=self,
+            caption="Cargar archivo de instrucciones",
+            directory="",
+            filter="Archivos de texto (*.txt);;Todos los archivos (*)",
+            initialFilter="Archivos de texto (*.txt)"
+        )
+        
+        if file_name:
+            try:
+                # Limpiar instrucciones existentes
+                self.procesador.intrMem.memory.clear()
+                self.procesador.pc = 0
+                self.procesador.cycles = 0
+                self.procesador.instrRetired = 0
+                
+                # Leer y cargar instrucciones
+                with open(file_name, 'r') as file:
+                    for line in file:
+                        line = line.strip()
+                        if line and not line.startswith('#'):  # Ignorar líneas vacías y comentarios
+                            self.parse_and_load_instruction(line)
+                
+                QMessageBox.information(
+                    self,
+                    "Carga exitosa",
+                    f"Instrucciones cargadas correctamente desde:\n{file_name}"
+                )
+                self.update_ui()
+                
+            except Exception as e:
+                QMessageBox.critical(
+                    self,
+                    "Error al cargar",
+                    f"No se pudo cargar el archivo:\n{str(e)}"
+                )
+
+    def parse_and_load_instruction(self, line):
+        """Convierte una línea de texto en una instrucción y la carga al procesador"""
+        try:
+            # Eliminar comentarios al final de la línea
+            line = line.split('#')[0].strip()
+            if not line:
+                return
+                
+            parts = line.split()
+            instr_type = parts[0].upper()
+            
+            if instr_type == "LW":
+                # Formato: LW rd, offset(rs1)
+                rd = self.parse_register(parts[1].strip(','))
+                offset, rs1 = self.parse_memory_operand(parts[2])
+                self.procesador.loadInstr(LW(rd, rs1, offset, self.procesador))
+                
+            elif instr_type == "SW":
+                # Formato: SW rs2, offset(rs1)
+                rs2 = self.parse_register(parts[1].strip(','))
+                offset, rs1 = self.parse_memory_operand(parts[2])
+                self.procesador.loadInstr(SW(rs2, rs1, offset, self.procesador))
+                
+            elif instr_type == "ADD":
+                # Formato: ADD rd, rs1, rs2
+                rd = self.parse_register(parts[1].strip(','))
+                rs1 = self.parse_register(parts[2].strip(','))
+                rs2 = self.parse_register(parts[3])
+                self.procesador.loadInstr(ADD(rd, rs1, rs2, self.procesador))
+                
+            elif instr_type == "ADDI":
+                # Formato: ADDI rd, rs1, imm
+                rd = self.parse_register(parts[1].strip(','))
+                rs1 = self.parse_register(parts[2].strip(','))
+                imm = self.parse_immediate(parts[3])
+                self.procesador.loadInstr(ADDI(rd, rs1, imm, self.procesador))
+                
+            elif instr_type == "SUB":
+                # Formato: SUB rd, rs1, rs2
+                rd = self.parse_register(parts[1].strip(','))
+                rs1 = self.parse_register(parts[2].strip(','))
+                rs2 = self.parse_register(parts[3])
+                self.procesador.loadInstr(SUB(rd, rs1, rs2, self.procesador))
+                
+            elif instr_type == "AND":
+                # Formato: AND rd, rs1, rs2
+                rd = self.parse_register(parts[1].strip(','))
+                rs1 = self.parse_register(parts[2].strip(','))
+                rs2 = self.parse_register(parts[3])
+                self.procesador.loadInstr(AND(rd, rs1, rs2, self.procesador))
+                
+            elif instr_type == "ANDI":
+                # Formato: ANDI rd, rs1, imm
+                rd = self.parse_register(parts[1].strip(','))
+                rs1 = self.parse_register(parts[2].strip(','))
+                imm = self.parse_immediate(parts[3])
+                self.procesador.loadInstr(ANDI(rd, rs1, imm, self.procesador))
+                
+            elif instr_type == "OR":
+                # Formato: OR rd, rs1, rs2
+                rd = self.parse_register(parts[1].strip(','))
+                rs1 = self.parse_register(parts[2].strip(','))
+                rs2 = self.parse_register(parts[3])
+                self.procesador.loadInstr(OR(rd, rs1, rs2, self.procesador))
+                
+            elif instr_type == "XOR":
+                # Formato: XOR rd, rs1, rs2
+                rd = self.parse_register(parts[1].strip(','))
+                rs1 = self.parse_register(parts[2].strip(','))
+                rs2 = self.parse_register(parts[3])
+                self.procesador.loadInstr(XOR(rd, rs1, rs2, self.procesador))
+                
+            elif instr_type == "BEQ":
+                # Formato: BEQ rs1, rs2, offset
+                rs1 = self.parse_register(parts[1].strip(','))
+                rs2 = self.parse_register(parts[2].strip(','))
+                offset = self.parse_immediate(parts[3])
+                self.procesador.loadInstr(BEQ(rs1, rs2, offset, self.procesador))
+                
+            else:
+                raise ValueError(f"Tipo de instrucción no reconocido: {instr_type}")
+                
+        except Exception as e:
+            raise ValueError(f"Error al analizar línea '{line}': {str(e)}")
+
+    def parse_register(self, reg_str):
+        """Extrae el número de registro de una cadena como 'x1' o '1'"""
+        if reg_str.startswith('x'):
+            return int(reg_str[1:])
+        return int(reg_str)
+
+    def parse_immediate(self, imm_str):
+        """Analiza valores inmediatos en decimal, hex (0x) o binario (0b)"""
+        if imm_str.startswith('0x'):
+            return int(imm_str[2:], 16)
+        elif imm_str.startswith('0b'):
+            return int(imm_str[2:], 2)
+        return int(imm_str)
+
+    def parse_memory_operand(self, mem_str):
+        """Analiza operandos de memoria como 'offset(rs1)'"""
+        if '(' in mem_str:
+            offset_part, reg_part = mem_str.split('(')
+            offset = self.parse_immediate(offset_part)
+            rs1 = self.parse_register(reg_part.strip(')'))
+            return offset, rs1
+        else:
+            # Asume offset 0 si no se especifica
+            return 0, self.parse_register(mem_str)
+        
     def update_cycle_time(self, value):
         """Actualiza el tiempo por ciclo en modo temporizado"""
         self.interval = value
@@ -86,9 +254,113 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_ui()
 
     def show_memory(self):
-        """Muestra el contenido de la memoria"""
-        # Implementar lógica para mostrar la memoria
-        pass
+        """Muestra el contenido de la memoria con texto oscuro para mejor legibilidad"""
+        dialog = QtWidgets.QDialog(self)
+        dialog.setWindowTitle("Memoria de Datos")
+        dialog.resize(600, 700)
+        
+        # Configuración de colores
+        text_color = "rgb(30, 30, 30)"  # Color de texto oscuro
+        header_color = "rgb(47, 47, 47)" # Color del encabezado
+        header_text_color = "rgb(255, 255, 255)" # Texto blanco para encabezados
+        cell_color = "rgb(240, 240, 240)" # Fondo de celdas
+        read_color = "rgb(200, 230, 255)" # Azul claro para lectura
+        write_color = "rgb(200, 255, 200)" # Verde claro para escritura
+        
+        # Crear tabla
+        table = QtWidgets.QTableWidget(32, 3)
+        table.setHorizontalHeaderLabels(["Índice", "Dirección", "Valor (hex/dec)"])
+        table.verticalHeader().setVisible(False)
+        
+        # Estilo de la tabla
+        table.setStyleSheet(f"""
+            QTableWidget {{
+                background-color: {cell_color};
+                gridline-color: rgb(180, 180, 180);
+            }}
+            QTableWidget QTableCornerButton::section {{
+                background-color: {header_color};
+            }}
+            QHeaderView::section {{
+                background-color: {header_color};
+                color: {header_text_color};
+                padding: 5px;
+                font: bold 10pt 'Kristen ITC';
+                border: none;
+            }}
+            QTableWidget::item {{
+                color: {text_color};
+                font: 10pt 'Consolas';
+            }}
+        """)
+        
+        # Llenar tabla con datos
+        for i in range(32):
+            address = i * 4  # Asumiendo direccionamiento por palabra de 4 bytes
+            value = self.procesador.dataMem.memory[i]
+            
+            # Índice
+            idx_item = QtWidgets.QTableWidgetItem(str(i))
+            idx_item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            
+            # Dirección
+            addr_item = QtWidgets.QTableWidgetItem(f"0x{address:08X}")
+            addr_item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            
+            # Valor
+            if value is not None:
+                val_text = f"0x{value:08X}\n({value})"
+                val_item = QtWidgets.QTableWidgetItem(val_text)
+                
+                # Resaltar accesos recientes
+                if hasattr(self.procesador.dataMem, 'last_accessed'):
+                    if i == self.procesador.dataMem.last_accessed:
+                        bg_color = write_color if getattr(self.procesador.dataMem, 'was_write', False) else read_color
+                        val_item.setBackground(QtGui.QColor(bg_color))
+            else:
+                val_item = QtWidgets.QTableWidgetItem("None")
+                val_item.setForeground(QtGui.QColor("rgb(150, 150, 150)"))  # Gris para valores None
+            
+            val_item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            
+            # Asegurar color de texto oscuro
+            for item in [idx_item, addr_item, val_item]:
+                item.setForeground(QtGui.QColor(text_color))
+            
+            table.setItem(i, 0, idx_item)
+            table.setItem(i, 1, addr_item)
+            table.setItem(i, 2, val_item)
+        
+        # Ajustar columnas
+        table.resizeColumnsToContents()
+        
+        # Configurar selección de filas completas
+        table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        
+        # Botón de cierre
+        close_btn = QtWidgets.QPushButton("Cerrar")
+        close_btn.setStyleSheet(f"""
+            QPushButton {{
+                font: 12pt 'Kristen ITC';
+                padding: 8px;
+                background-color: {header_color};
+                color: {header_text_color};
+                min-width: 100px;
+                border: none;
+            }}
+            QPushButton:hover {{
+                background-color: rgb(70, 70, 70);
+            }}
+        """)
+        close_btn.clicked.connect(dialog.close)
+        
+        # Layout
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(table)
+        layout.addWidget(close_btn, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+        
+        dialog.setLayout(layout)
+        dialog.exec()
 
     def update_ui(self):
         """Actualiza todos los elementos de la interfaz de usuario"""

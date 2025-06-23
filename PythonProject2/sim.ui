@@ -138,7 +138,7 @@ background-color: rgb(216, 216, 216);</string>
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="memoryButton">
     <property name="geometry">
      <rect>
       <x>990</x>
@@ -807,7 +807,7 @@ color: rgb(0, 0, 0);</string>
    <zorder>tableView</zorder>
    <zorder>tableView_2</zorder>
    <zorder>procBgLabel</zorder>
-   <zorder>pushButton</zorder>
+   <zorder>memoryButton</zorder>
    <zorder>ciclosLabel</zorder>
    <zorder>cycleValueLabel</zorder>
    <zorder>timeLabel</zorder>
