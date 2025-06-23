@@ -49,9 +49,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setup_menu(self):
         """Configura la barra de menú con opciones de archivo"""
-        from PyQt6.QtGui import QAction  # Importar desde el módulo correcto
         
-        menubar = self.menubar
+        menubar = self.menuBar()
         
         # Menú Archivo
         file_menu = menubar.addMenu("&Archivo")

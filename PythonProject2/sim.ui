@@ -663,7 +663,7 @@ font: 12pt &quot;Kristen ITC&quot;;</string>
      </rect>
     </property>
     <property name="autoFillBackground">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <layout class="QHBoxLayout" name="Ejecuciones">
      <property name="spacing">
@@ -793,12 +793,6 @@ color: rgb(0, 0, 0);</string>
       </widget>
      </item>
     </layout>
-    <zorder>exeCompleteButton</zorder>
-    <zorder>exeTimerButton</zorder>
-    <zorder>timePerCycleLabel</zorder>
-    <zorder>timeSelector</zorder>
-    <zorder>exeStepsButton</zorder>
-    <zorder>stepButton</zorder>
    </widget>
    <zorder>mainBgBoxLabel_2</zorder>
    <zorder>mainBgBoxLabel</zorder>
@@ -835,12 +829,6 @@ color: rgb(0, 0, 0);</string>
    <zorder>activeALULabel</zorder>
    <zorder>activeMemDLabel</zorder>
    <zorder>proce1Combo</zorder>
-   <zorder>timeSelector</zorder>
-   <zorder>timePerCycleLabel</zorder>
-   <zorder>exeCompleteButton</zorder>
-   <zorder>exeTimerButton</zorder>
-   <zorder>exeStepsButton</zorder>
-   <zorder>stepButton</zorder>
    <zorder>exeWidget</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -856,17 +844,6 @@ color: rgb(0, 0, 0);</string>
     <string notr="true">font: 87 8pt &quot;Arial Black&quot;;
 color: rgb(0, 0, 0);</string>
    </property>
-   <widget class="QMenu" name="menuArchivo">
-    <property name="styleSheet">
-     <string notr="true">font: 87 8pt &quot;Arial Black&quot;;
-color: rgb(0, 0, 0);</string>
-    </property>
-    <property name="title">
-     <string>Archivo</string>
-    </property>
-    <addaction name="actionCargar_Archivo"/>
-   </widget>
-   <addaction name="menuArchivo"/>
   </widget>
   <widget class="QStatusBar" name="statusbar">
    <property name="styleSheet">
