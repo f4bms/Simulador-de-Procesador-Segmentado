@@ -1,3 +1,3 @@
 class dataMemory:
     def __init__(self):
-        self.memory = [None]*32
+        self.memory = [0]*1024
