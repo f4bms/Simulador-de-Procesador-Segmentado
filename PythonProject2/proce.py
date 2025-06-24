@@ -6,6 +6,7 @@ from reg import *
 from regFile import *
 from alu import *
 from dataMem import *
+from HazardUnit import *
 
 class Procesador:
     def __init__(self, intv = 1):
@@ -18,6 +19,8 @@ class Procesador:
         self.regRegFile = Registr()
         self.alu_reg = Registr()
         self.reg_data = Registr()
+        self.enable_hazards = True
+        self.hazard_unit = HazardUnit(self) if True else None
 
         #para lo de los cuadritos de abajo:
         self.cycles = 0
@@ -25,6 +28,13 @@ class Procesador:
         self. instrRetired = 0
         self.pipel_stage = ["", "", "", "", ""]
         self.time = 1
+        self.metrics = {
+            'stalls': 0,
+            'flushes': 0,
+            'forwards': 0,
+            'cpi': 0.0,
+            'ipc': 0.0
+        }
 
         #Modos de ejecución
         self.running = False
@@ -147,6 +157,9 @@ class Procesador:
                 self.pipel_stage[1] = ""
 
             #IF
+            if self.enable_hazards and self.hazard_unit and self.hazard_unit.stall:
+                print("[STALL] Congelando IF y PC")
+                # No avanzar PC ni actualizar instr_reg
             if self.pc < len(self.intrMem.memory):
                 start = True
                 self.pipel_stage[0] = f"Instr {self.pc}"
@@ -155,6 +168,16 @@ class Procesador:
 
             else:
                 self.pipel_stage[0] = ""
+
+            # Verificar y manejar hazards
+            if self.enable_hazards and self.hazard_unit:
+                self.hazard_unit.check_hazards()
+                self.hazard_unit.resolve_hazards()
+
+                 # Actualizar métricas
+                self.metrics['stalls'] = self.hazard_unit.stall_count
+                self.metrics['flushes'] = self.hazard_unit.flush_count
+                self.metrics['forwards'] = self.hazard_unit.forward_count
 
             completedTime = self.time
             if completedTime > 0:

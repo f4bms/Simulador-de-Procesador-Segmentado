@@ -3,6 +3,9 @@ class ADD:
         self.rd, self.rs1, self.rs2 = rd, rs1, rs2
         self.proce = proce
         self.steps = [self.id, self.ex, self.wb]
+        self.result = None  # Para forwarding
+        self.op1 = None
+        self.op2 = None
 
     def id(self):
         print("empezando add")
@@ -22,3 +25,13 @@ class ADD:
     def execute(self):
         if self.steps:
             self.steps.pop(0)()
+
+    # Métodos para hazard unit
+    def uses_rs(self):
+        return True
+
+    def uses_rt(self):
+        return True
+
+    def modifies_rd(self):
+        return True

@@ -5,6 +5,8 @@ class ANDI:
         self.imm = imm
         self.proce = proce
         self.steps = [self.step1, self.step2, self.step3]
+        self.result = None  # Para forwarding
+        self.op1 = None
 
     def step1(self):
         print("empezando andi")
@@ -12,14 +14,24 @@ class ANDI:
         print(f"ANDI: [ID] op1 = {self.op1}, imm = {self.imm}")
 
     def step2(self):
-        self.res = self.proce.alu.OP(self.op1, self.imm, 2)  # 2 = AND
-        print(f"ANDI: [EX] res = {self.res}")
+        self.result = self.proce.alu.OP(self.op1, self.imm, 2)  # 2 = AND
+        print(f"ANDI: [EX] res = {self.result}")
 
     def step3(self):
-        self.proce.regFile.reg[self.rd] = self.res
-        print(f"ANDI: [WB] x{self.rd} <- {self.res}\nANDI terminada")
+        self.proce.regFile.reg[self.rd] = self.result
+        print(f"ANDI: [WB] x{self.rd} <- {self.result}\nANDI terminada")
 
     def execute(self):
         if self.steps:
             fase = self.steps.pop(0)
             fase()
+
+    # Métodos para hazard unit
+    def uses_rs(self):
+        return True
+
+    def uses_rt(self):
+        return False
+
+    def modifies_rd(self):
+        return True

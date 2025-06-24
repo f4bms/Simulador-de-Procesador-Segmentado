@@ -10,6 +10,7 @@ from and_ import *
 from or_ import *
 from xor_ import *
 from andi import *
+from HazardProcessor import HazardProcessor
 
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 from PyQt6.QtCore import QTimer
