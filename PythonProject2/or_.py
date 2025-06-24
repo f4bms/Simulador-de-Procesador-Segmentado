@@ -6,6 +6,12 @@ class OR:
         self.proce = proce
         self.steps = [self.step1, self.step2, self.step3]
 
+    def __str__(self):
+        return f"OR x{self.rd}, x{self.rs1}, x{self.rs2}"
+
+    def __repr__(self):
+        return str(self)
+
     def step1(self):
         print("empezando or")
         self.op1 = self.proce.regFile.read(self.rs1)

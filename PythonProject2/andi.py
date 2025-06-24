@@ -6,6 +6,12 @@ class ANDI:
         self.proce = proce
         self.steps = [self.step1, self.step2, self.step3]
 
+    def __str__(self):
+        return f"ANDI x{self.rd}, x{self.rs1}, {self.imm}"
+
+    def __repr__(self):
+        return str(self)
+
     def step1(self):
         print("empezando andi")
         self.op1 = self.proce.regFile.read(self.rs1)

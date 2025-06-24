@@ -85,7 +85,7 @@ class Procesador:
             start_time = time.time()
             self.execute()
             elapsed = time.time() - start_time
-            latency = max(0, 0.005 - elapsed)
+            latency = max(0, 0.02 - elapsed)
             time.sleep(latency)
     
     def execute_timed(self):

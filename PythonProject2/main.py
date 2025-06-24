@@ -478,9 +478,11 @@ class MainWindow(QtWidgets.QMainWindow):
         model.setHorizontalHeaderLabels(["Instrucción"])
         
         for i, instr in enumerate(self.procesador.intrMem.memory):
-            item = QtGui.QStandardItem(str(instr))
-            model.setItem(i, 0, item)
-        
+            try:
+                item_text = str(instr)
+            except:
+                item_text = f"Instruccion: {i}"
+            model.setItem(i, 0, QtGui.QStandardItem(item_text))
         self.tableView_2.setModel(model)
         self.tableView_2.resizeColumnsToContents()
 

@@ -4,6 +4,12 @@ class ADD:
         self.proce = proce
         self.steps = [self.id, self.ex, self.wb]
 
+    def __str__(self):
+        return f"ADD x{self.rd}, x{self.rs1}, x{self.rs2}"
+
+    def __repr__(self):
+        return str(self)
+
     def id(self):
         print("empezando add")
 

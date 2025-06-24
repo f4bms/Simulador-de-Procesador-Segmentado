@@ -8,6 +8,12 @@ class BEQ:
         self.predicted_taken = False
         self.original_pc = proce.pc
 
+    def __str__(self):
+        return f"BEQ x{self.rs1}, x{self.rs2}, {self.imm}"
+
+    def __repr__(self):
+        return str(self)
+
     def id(self):
         print("empezando beq")
 

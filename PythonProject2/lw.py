@@ -1,34 +1,40 @@
 class LW:
-        def __init__(self, rd, imm, rs1, proce):
+    def __init__(self, rd, imm, rs1, proce):
 
-            self.rd = rd
-            self.imm = imm
-            self.rs1 = rs1
-            self.proce = proce
+        self.rd = rd
+        self.imm = imm
+        self.rs1 = rs1
+        self.proce = proce
 
-            self.steps = [self.step1, self.step2, self.step3, self.step4]
+        self.steps = [self.step1, self.step2, self.step3, self.step4]
 
-        def step1(self):
-            print("empezando lw")
-            self.proce.regRegFile.data = self.proce.regFile.read(self.rs1)
-            print("valor =",self.proce.regRegFile.data)
+    def __str__(self):
+        return f"LW x{self.rd}, {self.imm}(x{self.rs1})"
 
-        def step2(self):
-            self.proce.alu_reg.data = self.proce.alu.OP(self.proce.regRegFile.data, self.imm,0)
-            print("LW:dirección =", self.proce.alu_reg.data)
+    def __repr__(self):
+        return str(self)
 
-        def step3(self):
-            addr = self.proce.alu_reg.data
-            self.proce.reg_data.data = self.proce.dataMem.read(addr)
-            print("LW:dato =", self.proce.reg_data.data)
+    def step1(self):
+        print("empezando lw")
+        self.proce.regRegFile.data = self.proce.regFile.read(self.rs1)
+        print("valor =",self.proce.regRegFile.data)
 
-        def step4(self):
-            self.proce.regFile.write(self.rd, self.proce.reg_data.data)
-            print("LW:resultado =", self.proce.regFile.read(self.rd))
+    def step2(self):
+        self.proce.alu_reg.data = self.proce.alu.OP(self.proce.regRegFile.data, self.imm,0)
+        print("LW:dirección =", self.proce.alu_reg.data)
 
-        def execute(self):
-            if self.steps:
-                fase = self.steps.pop(0)
-                fase()
-                if not self.steps:  # ya se ejecutó la última etapa
-                    print("LW terminó")
+    def step3(self):
+        addr = self.proce.alu_reg.data
+        self.proce.reg_data.data = self.proce.dataMem.read(addr)
+        print("LW:dato =", self.proce.reg_data.data)
+
+    def step4(self):
+        self.proce.regFile.write(self.rd, self.proce.reg_data.data)
+        print("LW:resultado =", self.proce.regFile.read(self.rd))
+
+    def execute(self):
+        if self.steps:
+            fase = self.steps.pop(0)
+            fase()
+            if not self.steps:  # ya se ejecutó la última etapa
+                print("LW terminó")
