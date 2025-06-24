@@ -26,8 +26,8 @@ class AND:
         print(f"AND: [EX] res = {self.result}")
 
     def step3(self):
-        self.proce.regFile.write(self.rd, self.res)
-        print(f"AND: [WB] x{self.rd} <- {self.res}\nAND terminada")
+        self.proce.regFile.write(self.rd, self.result)
+        print(f"AND: [WB] x{self.rd} <- {self.result}\nAND terminada")
 
     def execute(self):
         if self.steps:

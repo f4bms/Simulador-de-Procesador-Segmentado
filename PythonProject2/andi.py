@@ -20,7 +20,7 @@ class ANDI:
         print(f"ANDI: [ID] op1 = {self.op1}, imm = {self.imm}")
 
     def step2(self):
-        self.result = self.proce.alu.OP(self.op1, self.imm, 2)  # 2 = AND
+        self.res = self.proce.alu.OP(self.op1, self.imm, 2)  # 2 = AND
         print(f"ANDI: [EX] res = {self.result}")
 
     def step3(self):

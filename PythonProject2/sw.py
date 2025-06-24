@@ -1,5 +1,6 @@
 class SW:
     def __init__(self, rd, imm, rs1, proce):
+        self.base = None
         self.rd   = rd
         self.imm  = imm
         self.rs1  = rs1

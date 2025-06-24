@@ -78,9 +78,10 @@ class Procesador:
         self.stop_event.clear()
 
         if self.execution_mode == "complete":
-            self.execute_complete()
+            threading.Thread(target=self.execute, kwargs={"complete":True}, daemon=True).start()
         elif self.execution_mode == "step":
             self.step_event.clear()
+            threading.Thread(target=self.execute, daemon=True).start()
         elif self.execution_mode == "timed":
             threading.Thread(target=self.execute_timed, daemon=True).start()
     

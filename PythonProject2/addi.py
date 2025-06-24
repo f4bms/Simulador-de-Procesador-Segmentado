@@ -8,6 +8,7 @@ class ADDI:
         self.steps = [self.step1, self.step2, self.step3]
 
         self.result = None  # Para forwarding
+
     def __str__(self):
         return f"ADDI x{self.rd}, x{self.rs1}, {self.imm}"
 
@@ -20,12 +21,12 @@ class ADDI:
         print("ADDI: ", self.proce.regRegFile.data)
 
     def step2(self):
-        self.result = self.proce.alu.OP(self.op1, self.imm, 0)
+        self.result = self.proce.alu.OP(self.proce.regRegFile.data, self.imm, 0)
         print(f"ADDI:[EX] res={self.result}")
 
     def step3(self):
-        self.proce.regFile.write(self.rd, self.proce.alu_reg.data)
-        print(f"ADDI:[WB] x{self.rd} <- {self.proce.alu_reg.data}")
+        self.proce.regFile.write(self.rd, self.result)
+        print(f"ADDI:[WB] x{self.rd} <- {self.result}")
 
     def execute(self):
         if self.steps:

@@ -26,8 +26,8 @@ class OR:
         print(f"OR: [EX] res = {self.result}")
 
     def step3(self):
-        self.proce.regFile.write(self.rd, self.res)
-        print(f"OR: [WB] x{self.rd} <- {self.res}\nOR terminada")
+        self.proce.regFile.write(self.rd, self.result)
+        print(f"OR: [WB] x{self.rd} <- {self.result}\nOR terminada")
 
     def execute(self):
         if self.steps:

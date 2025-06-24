@@ -65,7 +65,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_not_taken")
         elif index1 == 3:
             self.procesador.enable_hazard_unit()
-            self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
+            self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_not_taken")
 
         index2 = self.proce2Combo.currentIndex()
         if index2 == 0:
@@ -77,7 +77,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_not_taken")
         elif index2 == 3:
             self.procesador2.enable_hazard_unit()
-            self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
+            self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_not_taken")
 
     def setup_menu(self):
         """Configura la barra de menú con opciones de archivo"""
@@ -272,6 +272,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def execute_complete(self):
         """Ejecuta todas las instrucciones de una vez"""
+        self.execution_started = True
         self.procesador.set_execution_mode("complete")
         self.procesador2.set_execution_mode("complete")
         self.procesador.start_execution()
@@ -280,6 +281,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def execute_timed(self):
         """Ejecuta las instrucciones con temporización"""
+        self.execution_started = True
         self.procesador.set_execution_mode("timed", self.interval)
         self.procesador2.set_execution_mode("timed", self.interval)
         self.procesador.start_execution()
@@ -289,6 +291,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def start_step_mode(self):
         """Inicia el modo paso a paso"""
         self.step_mode = True
+        self.execution_started = True
         self.procesador.set_execution_mode("step")
         self.procesador2.set_execution_mode("step")
         self.procesador.start_execution()
@@ -411,22 +414,138 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog.setLayout(layout)
         dialog.exec()
 
+    def show_statistics(self):
+        """Muestra una ventana con las estadísticas de ambos procesadores"""
+        dialog = QtWidgets.QDialog(self)
+        dialog.setWindowTitle("Estadísticas de Ejecución")
+        dialog.resize(800, 600)
+
+        # Configurar colores
+        text_color = "rgb(30, 30, 30)"
+        header_color = "rgb(47, 47, 47)"
+        header_text_color = "rgb(255, 255, 255)"
+        cell_color = "rgb(240, 240, 240)"
+
+        # Crear tabla de estadísticas
+        table = QtWidgets.QTableWidget(10, 3)
+        table.setHorizontalHeaderLabels(["Métrica", "Procesador 1", "Procesador 2"])
+        table.verticalHeader().setVisible(False)
+
+        # Estilo de la tabla
+        table.setStyleSheet(f"""
+            QTableWidget {{
+                background-color: {cell_color};
+                gridline-color: rgb(180, 180, 180);
+            }}
+            QTableWidget QTableCornerButton::section {{
+                background-color: {header_color};
+            }}
+            QHeaderView::section {{
+                background-color: {header_color};
+                color: {header_text_color};
+                padding: 5px;
+                font: bold 10pt 'Kristen ITC';
+                border: none;
+            }}
+            QTableWidget::item {{
+                color: {text_color};
+                font: 10pt 'Consolas';
+            }}
+        """)
+
+        # Datos de las métricas
+        metrics = [
+            ("Ciclos totales", self.procesador.cycles, self.procesador2.cycles),
+            ("Instrucciones retiradas", self.procesador.instrRetired, self.procesador2.instrRetired),
+            ("Tiempo de ejecución (s)", f"{self.procesador.time:.2f}", f"{self.procesador2.time:.2f}"),
+            ("CPI (Ciclos por instrucción)",
+             f"{self.procesador.cycles / max(1, self.procesador.instrRetired):.2f}",
+             f"{self.procesador2.cycles / max(1, self.procesador2.instrRetired):.2f}"),
+            ("IPC (Instrucciones por ciclo)",
+             f"{self.procesador.instrRetired / max(1, self.procesador.cycles):.2f}",
+             f"{self.procesador2.instrRetired / max(1, self.procesador2.cycles):.2f}"),
+            ("Stalls",
+             getattr(self.procesador.hazard_unit, 'stall_count', 0) if self.procesador.hazard_unit else 0,
+             getattr(self.procesador2.hazard_unit, 'stall_count', 0) if self.procesador2.hazard_unit else 0),
+            ("Flushes",
+             getattr(self.procesador.hazard_unit, 'flush_count', 0) if self.procesador.hazard_unit else 0,
+             getattr(self.procesador2.hazard_unit, 'flush_count', 0) if self.procesador2.hazard_unit else 0),
+            ("Forwards",
+             getattr(self.procesador.hazard_unit, 'forward_count', 0) if self.procesador.hazard_unit else 0,
+             getattr(self.procesador2.hazard_unit, 'forward_count', 0) if self.procesador2.hazard_unit else 0),
+            ("Mispredicciones de saltos",
+             self.procesador.mispredictions if self.procesador.branch_prediction else "N/A",
+             self.procesador2.mispredictions if self.procesador2.branch_prediction else "N/A"),
+            ("Tasa de error en predicción (%)",
+             f"{self.procesador.get_branch_stats():.2f}" if self.procesador.branch_prediction else "N/A",
+             f"{self.procesador2.get_branch_stats():.2f}" if self.procesador2.branch_prediction else "N/A")
+        ]
+
+        # Llenar la tabla con los datos
+        for row, (metric, p1_val, p2_val) in enumerate(metrics):
+            metric_item = QtWidgets.QTableWidgetItem(metric)
+            p1_item = QtWidgets.QTableWidgetItem(str(p1_val))
+            p2_item = QtWidgets.QTableWidgetItem(str(p2_val))
+
+            # Centrar el texto y asegurar color oscuro
+            for item in [metric_item, p1_item, p2_item]:
+                item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+                item.setForeground(QtGui.QColor(text_color))
+
+            table.setItem(row, 0, metric_item)
+            table.setItem(row, 1, p1_item)
+            table.setItem(row, 2, p2_item)
+
+        # Ajustar columnas
+        table.resizeColumnsToContents()
+
+        # Botón de cierre
+        close_btn = QtWidgets.QPushButton("Cerrar")
+        close_btn.setStyleSheet(f"""
+            QPushButton {{
+                font: 12pt 'Kristen ITC';
+                padding: 8px;
+                background-color: {header_color};
+                color: {header_text_color};
+                min-width: 100px;
+                border: none;
+            }}
+            QPushButton:hover {{
+                background-color: rgb(70, 70, 70);
+            }}
+        """)
+        close_btn.clicked.connect(dialog.close)
+
+        # Layout
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(table)
+        layout.addWidget(close_btn, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+
+        dialog.setLayout(layout)
+        dialog.exec()
+
     def update_ui(self):
         """Actualiza todos los elementos de la interfaz de usuario"""
         # Actualizar estadísticas
         self.cycleValueLabel.setText(str(self.procesador.cycles))
         self.timeValueLabel.setText(f"{self.procesador.time:.2f}")
         self.pcValueLabel.setText(str(self.procesador.pc))
-        
+
         # Actualizar pipeline
         self.update_pipeline_display()
-        
+
         # Actualizar registros y memoria
         self.update_registers_table()
         self.update_instructions_table()
-        
+
         # Actualizar componentes activos
         self.update_active_components()
+
+        # Verificar si ambos procesadores han terminado
+        if (not self.procesador.running and not self.procesador2.running and
+                hasattr(self, 'execution_started') and self.execution_started):
+            self.execution_started = False
+            self.show_statistics()
 
     def update_pipeline_display(self):
         """Actualiza la visualización gráfica de las etapas del pipeline"""

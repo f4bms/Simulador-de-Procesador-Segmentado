@@ -41,8 +41,8 @@ class LW:
         print(f"LW:[MEM] dato={self.result}")
 
     def step4(self):
-        self.proce.regFile.write(self.rd, self.proce.reg_data.data)
-        print("LW:resultado =", self.proce.regFile.reg[self.rd])
+        self.proce.regFile.write(self.rd, self.result)
+        print("LW:resultado =", self.result)
 
     def execute(self):
         if self.steps:

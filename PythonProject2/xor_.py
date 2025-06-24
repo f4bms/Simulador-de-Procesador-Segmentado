@@ -26,8 +26,8 @@ class XOR:
         print(f"XOR: [EX] res = {self.result}")
 
     def step3(self):
-        self.proce.regFile.write(self.rd, self.res)
-        print(f"XOR: [WB] x{self.rd} <- {self.res}\nXOR terminada")
+        self.proce.regFile.write(self.rd, self.result)
+        print(f"XOR: [WB] x{self.rd} <- {self.result}\nXOR terminada")
 
     def execute(self):
         if self.steps:
