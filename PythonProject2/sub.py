@@ -7,10 +7,17 @@ class SUB:
         self.op1 = None
         self.op2 = None
 
+    def __str__(self):
+        return f"SUB x{self.rd}, x{self.rs1}, x{self.rs2}"
+
+    def __repr__(self):
+        return str(self)
+
     def id(self):
         print("empezando sub")
-        self.op1 = self.proce.regFile.reg[self.rs1]
-        self.op2 = self.proce.regFile.reg[self.rs2]
+
+        self.op1 = self.proce.regFile.read(self.rs1)
+        self.op2 = self.proce.regFile.read(self.rs2)
         print(f"[ID] op1={self.op1} op2={self.op2}")
 
     def ex(self):
@@ -18,8 +25,8 @@ class SUB:
         print(f"[EX] result={self.result}")
 
     def wb(self):
-        self.proce.regFile.reg[self.rd] = self.result
-        print(f"[WB] x{self.rd} <- {self.result}\nSUB terminada")
+        self.proce.regFile.write(self.rd, self.result)
+        print(f"[WB] x{self.rd} <- {self.result}")
 
     def execute(self):
         if self.steps:

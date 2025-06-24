@@ -9,10 +9,16 @@ class OR:
         self.op1 = None
         self.op2 = None
 
+    def __str__(self):
+        return f"OR x{self.rd}, x{self.rs1}, x{self.rs2}"
+
+    def __repr__(self):
+        return str(self)
+
     def step1(self):
         print("empezando or")
-        self.op1 = self.proce.regFile.reg[self.rs1]
-        self.op2 = self.proce.regFile.reg[self.rs2]
+        self.op1 = self.proce.regFile.read(self.rs1)
+        self.op2 = self.proce.regFile.read(self.rs2)
         print(f"OR: [ID] op1 = {self.op1}, op2 = {self.op2}")
 
     def step2(self):
@@ -20,8 +26,8 @@ class OR:
         print(f"OR: [EX] res = {self.result}")
 
     def step3(self):
-        self.proce.regFile.reg[self.rd] = self.result
-        print(f"OR: [WB] x{self.rd} <- {self.result}\nOR terminada")
+        self.proce.regFile.write(self.rd, self.res)
+        print(f"OR: [WB] x{self.rd} <- {self.res}\nOR terminada")
 
     def execute(self):
         if self.steps:

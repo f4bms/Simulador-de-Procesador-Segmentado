@@ -62,7 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.procesador.enable_hazard_unit()
             self.procesador.enable_branch_prediction(enabled=False)
         elif index1 == 2:
-            self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
+            self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_not_taken")
         elif index1 == 3:
             self.procesador.enable_hazard_unit()
             self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
@@ -74,7 +74,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.procesador2.enable_hazard_unit()
             self.procesador2.enable_branch_prediction(enabled=False)
         elif index2 == 2:
-            self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
+            self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_not_taken")
         elif index2 == 3:
             self.procesador2.enable_hazard_unit()
             self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
@@ -108,7 +108,7 @@ class MainWindow(QtWidgets.QMainWindow):
             caption="Cargar archivo de instrucciones",
             directory="",
             filter="Archivos de texto (*.txt);;Assembly RISCV (*.s);;Todos los archivos (*)",
-            initialFilter="Archivos de texto (*.txt)"
+            initialFilter="Assembly RISCV (*.s)"
         )
         
         if file_name:
@@ -483,9 +483,11 @@ class MainWindow(QtWidgets.QMainWindow):
         model.setHorizontalHeaderLabels(["Instrucción"])
         
         for i, instr in enumerate(self.procesador.intrMem.memory):
-            item = QtGui.QStandardItem(str(instr))
-            model.setItem(i, 0, item)
-        
+            try:
+                item_text = str(instr)
+            except:
+                item_text = f"Instruccion: {i}"
+            model.setItem(i, 0, QtGui.QStandardItem(item_text))
         self.tableView_2.setModel(model)
         self.tableView_2.resizeColumnsToContents()
 

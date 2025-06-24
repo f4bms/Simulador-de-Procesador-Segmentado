@@ -8,9 +8,15 @@ class ANDI:
         self.result = None  # Para forwarding
         self.op1 = None
 
+    def __str__(self):
+        return f"ANDI x{self.rd}, x{self.rs1}, {self.imm}"
+
+    def __repr__(self):
+        return str(self)
+
     def step1(self):
         print("empezando andi")
-        self.op1 = self.proce.regFile.reg[self.rs1]
+        self.op1 = self.proce.regFile.read(self.rs1)
         print(f"ANDI: [ID] op1 = {self.op1}, imm = {self.imm}")
 
     def step2(self):
@@ -18,8 +24,8 @@ class ANDI:
         print(f"ANDI: [EX] res = {self.result}")
 
     def step3(self):
-        self.proce.regFile.reg[self.rd] = self.result
-        print(f"ANDI: [WB] x{self.rd} <- {self.result}\nANDI terminada")
+        self.proce.regFile.write(self.rd, self.res)
+        print(f"ANDI: [WB] x{self.rd} <- {self.res}\nANDI terminada")
 
     def execute(self):
         if self.steps:

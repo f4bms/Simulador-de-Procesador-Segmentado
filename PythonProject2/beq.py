@@ -11,11 +11,17 @@ class BEQ:
         self.predicted_taken = False
         self.original_pc = proce.pc
 
+    def __str__(self):
+        return f"BEQ x{self.rs1}, x{self.rs2}, {self.imm}"
+
+    def __repr__(self):
+        return str(self)
+
     def id(self):
         print("empezando beq")
 
-        self.op1 = self.proce.regFile.reg[self.rs1]
-        self.op2 = self.proce.regFile.reg[self.rs2]
+        self.op1 = self.proce.regFile.read(self.rs1)
+        self.op2 = self.proce.regFile.read(self.rs2)
         print(f"[ID] op1={self.op1} op2={self.op2}")
 
         if self.proce.branch_prediction:

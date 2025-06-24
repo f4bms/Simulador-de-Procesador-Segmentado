@@ -8,19 +8,25 @@ class SW:
         self.addr = None
         self.data = None
 
+    def __str__(self):
+        return f"SW x{self.rd}, {self.imm}(x{self.rs1})"
+
+    def __repr__(self):
+        return str(self)
+
     def step1(self):
         print("empezando sw")
-        self.base = self.proce.regFile.reg[self.rs1]
-        self.data = self.proce.regFile.reg[self.rd]
-        print(f"SW:[ID] base={self.base}, data={self.data}")
+        self.base = self.proce.regFile.read(self.rs1)
+        self.data = self.proce.regFile.read(self.rd)
+        print("valor base =", self.base, "dato =", self.data)
 
     def step2(self):
         self.addr = self.proce.alu.OP(self.base, self.imm, 0)
         print(f"SW:[EX] dirección={self.addr}")
 
     def step3(self):
-        self.proce.dataMem.memory[self.addr] = self.data
-        print(f"SW:[MEM] Mem[{self.addr}] <- {self.data}\nSW terminada")
+        self.proce.dataMem.write(self.addr, self.data)
+        print(f"dato escrito: Mem[{self.addr}] <- {self.data}\nSW terminada")
 
     def execute(self):
         if self.steps:

@@ -27,7 +27,7 @@ class Procesador:
         self.pc = 0
         self. instrRetired = 0
         self.pipel_stage = ["", "", "", "", ""]
-        self.time = 1
+        self.time = 0
         self.metrics = {
             'stalls': 0,
             'flushes': 0,
@@ -45,7 +45,7 @@ class Procesador:
 
         #Predicción de saltos
         self.branch_prediction = False
-        self.branch_prediction_mode = "always_taken"
+        self.branch_prediction_mode = "always_not_taken"
         self.branch_history = {} #Para prediccion dinamica
         self.mispredictions = 0
         self.branch_total = 0
@@ -74,6 +74,7 @@ class Procesador:
 
     def start_execution(self):
         self.running = True
+        self.start_exe_time = time.time()
         self.stop_event.clear()
 
         if self.execution_mode == "complete":
@@ -94,11 +95,10 @@ class Procesador:
     def execute_complete(self):
         while self.running and not self.stop_event.is_set():
             start_time = time.time()
-            self.execute(complete=True)
-
+            self.execute()
             elapsed = time.time() - start_time
-            sleep_time = max(0, 0.005 - elapsed)
-            time.sleep(sleep_time)
+            latency = max(0, 0.02 - elapsed)
+            time.sleep(latency)
     
     def execute_timed(self):
         while self.running and not self.stop_event.is_set():
@@ -117,6 +117,8 @@ class Procesador:
             
             self.cycles += 1
             start = False
+
+            self.time = time.time() - self.start_exe_time
 
             #wb
             if self.reg_data.instr is not None:
@@ -166,7 +168,7 @@ class Procesador:
             if self.pc < len(self.intrMem.memory):
                 start = True
                 self.pipel_stage[0] = f"Instr {self.pc}"
-                self.instr_reg.instr = self.intrMem.memory[self.pc]
+                self.instr_reg.instr = self.intrMem.read(self.pc)
                 self.pc +=1
 
             else:
@@ -190,7 +192,18 @@ class Procesador:
             else:
                 cpi = ipc = clock_rate = 0
 
-            if not complete or not start or self.stop_event.is_set():
+            if (self.pc >= len(self.intrMem.memory) and
+                    self.instr_reg.instr is None and
+                    self.regRegFile.instr is None and
+                    self.alu_reg.instr is None and
+                    self.reg_data.instr is None):
+                self.stop_execution()
                 break
 
-            #todo esto meter a la parte grafica
+            self.intrMem.clear_active()
+            self.regFile.clear_active()
+            self.alu.clear_active()
+            self.dataMem.clear_active()
+
+            if not complete or not start or self.stop_event.is_set():
+                break
