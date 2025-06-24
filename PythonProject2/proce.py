@@ -26,16 +26,84 @@ class Procesador:
         self.pipel_stage = ["", "", "", "", ""]
         self.time = 1
 
+        #Modos de ejecución
+        self.running = False
+        self.execution_mode = "complete"
+        self.cycle_time = 1.0
+        self.step_event = threading.Event()
+        self.stop_event = threading.Event()
+
+        #Predicción de saltos
+        self.branch_prediction = False
+        self.branch_prediction_mode = "always_taken"
+        self.branch_history = {} #Para prediccion dinamica
+        self.mispredictions = 0
+        self.branch_total = 0
+
+    def enable_branch_prediction(self, enabled = True, prediction_mode = "always_taken"):
+        self.branch_prediction = enabled
+        self.branch_prediction_mode = prediction_mode
+    
+    def get_branch_stats(self):
+        if self.branch_total == 0:
+            return 0.0
+        return (self.mispredictions / self.branch_total) * 100
+
     def loadInstr(self, instr):
         self.intrMem.memory.append(instr)
+    
+    def set_execution_mode(self, mode, cycle_time=1.0):
+        valid_modes = ["complete", "step", "timed"]
+        if mode not in valid_modes:
+            raise ValueError(f"Modo inválido. Debe ser uno de {valid_modes}")
+        self.execution_mode = mode
+        self.cycle_time = cycle_time
 
-    def execute(self):
-        start = True
-        timer = time.time()
-        while start:
+    def start_execution(self):
+        self.running = True
+        self.stop_event.clear()
+
+        if self.execution_mode == "complete":
+            self.execute_complete()
+        elif self.execution_mode == "step":
+            self.step_event.clear()
+        elif self.execution_mode == "timed":
+            threading.Thread(target=self.execute_timed, daemon=True).start()
+    
+    def stop_execution(self):
+        self.running = False
+        self.stop_event.set()
+    
+    def step(self):
+        if self.execution_mode == "step" and self.running:
+            self.step_event.set()
+    
+    def execute_complete(self):
+        while self.running and not self.stop_event.is_set():
+            start_time = time.time()
+            self.execute(complete=True)
+
+            elapsed = time.time() - start_time
+            sleep_time = max(0, 0.005 - elapsed)
+            time.sleep(sleep_time)
+    
+    def execute_timed(self):
+        while self.running and not self.stop_event.is_set():
+            start_time = time.time()
+            self.execute()
+
+            elapsed = time.time() - start_time
+            sleep_time = max(0, self.cycle_time - elapsed)
+            time.sleep(sleep_time)
+
+    def execute(self, complete=False):
+        while True:
+            if not complete and self.execution_mode == "step":
+                self.step_event.wait()
+                self.step_event.clear()
+            
             self.cycles += 1
             start = False
-
 
             #wb
             if self.reg_data.instr is not None:
@@ -96,17 +164,7 @@ class Procesador:
             else:
                 cpi = ipc = clock_rate = 0
 
+            if not complete or not start or self.stop_event.is_set():
+                break
+
             #todo esto meter a la parte grafica
-
-
-
-
-    
-
-
-
-
-
-
-
-

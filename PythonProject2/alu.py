@@ -1,6 +1,6 @@
 class ALU:
     def __init__(self):
-        pass
+        self.active = False
 
     def OP(self, A, B, op):
         if op == 0:
