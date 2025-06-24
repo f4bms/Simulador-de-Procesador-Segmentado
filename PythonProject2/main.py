@@ -59,20 +59,24 @@ class MainWindow(QtWidgets.QMainWindow):
         if index1 == 0:
             self.procesador.enable_branch_prediction(enabled=False)
         elif index1 == 1:
+            self.procesador.enable_hazard_unit()
             self.procesador.enable_branch_prediction(enabled=False)
         elif index1 == 2:
             self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
         elif index1 == 3:
+            self.procesador.enable_hazard_unit()
             self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
 
         index2 = self.proce2Combo.currentIndex()
         if index2 == 0:
             self.procesador2.enable_branch_prediction(enabled=False)
         elif index2 == 1:
+            self.procesador2.enable_hazard_unit()
             self.procesador2.enable_branch_prediction(enabled=False)
         elif index2 == 2:
             self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
         elif index2 == 3:
+            self.procesador2.enable_hazard_unit()
             self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
 
     def setup_menu(self):

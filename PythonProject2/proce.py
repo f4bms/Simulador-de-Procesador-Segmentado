@@ -9,7 +9,7 @@ from dataMem import *
 from HazardUnit import *
 
 class Procesador:
-    def __init__(self, intv = 1):
+    def __init__(self, intv = 1, enable_hazards = False):
         self.intv = intv
         self.intrMem = instrMemory()
         self.regFile = regFile()
@@ -19,7 +19,7 @@ class Procesador:
         self.regRegFile = Registr()
         self.alu_reg = Registr()
         self.reg_data = Registr()
-        self.enable_hazards = True
+        self.enable_hazards = enable_hazards
         self.hazard_unit = HazardUnit(self) if True else None
 
         #para lo de los cuadritos de abajo:
@@ -49,6 +49,9 @@ class Procesador:
         self.branch_history = {} #Para prediccion dinamica
         self.mispredictions = 0
         self.branch_total = 0
+
+    def enable_hazard_unit(self, enabled = True):
+        self.hazard_unit = HazardUnit(self) if enabled else None
 
     def enable_branch_prediction(self, enabled = True, prediction_mode = "always_taken"):
         self.branch_prediction = enabled
