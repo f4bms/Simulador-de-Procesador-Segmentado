@@ -3,6 +3,7 @@ class ALU:
         self.active = False
 
     def OP(self, A, B, op):
+        self.active = True  # Se activa al operar
         if op == 0:
             return A + B
         elif op == 1:
@@ -15,3 +16,6 @@ class ALU:
             return A ^ B
         else:
             raise ValueError("No se reconoce la operacion")
+
+    def clear_active(self):
+        self.active = False  # Se desactiva

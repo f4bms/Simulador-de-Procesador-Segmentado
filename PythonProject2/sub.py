@@ -7,8 +7,8 @@ class SUB:
     def id(self):
         print("empezando sub")
 
-        self.op1 = self.proce.regFile.reg[self.rs1]
-        self.op2 = self.proce.regFile.reg[self.rs2]
+        self.op1 = self.proce.regFile.read(self.rs1)
+        self.op2 = self.proce.regFile.read(self.rs2)
         print(f"[ID] op1={self.op1} op2={self.op2}")
 
     def ex(self):
@@ -16,7 +16,7 @@ class SUB:
         print(f"[EX] result={self.result}")
 
     def wb(self):
-        self.proce.regFile.reg[self.rd] = self.result
+        self.proce.regFile.write(self.rd, self.result)
         print(f"[WB] x{self.rd} <- {self.result}")
 
     def execute(self):

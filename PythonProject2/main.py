@@ -60,9 +60,9 @@ class MainWindow(QtWidgets.QMainWindow):
         elif index1 == 1:
             self.procesador.enable_branch_prediction(enabled=False)
         elif index1 == 2:
-            self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
+            self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_not_taken")
         elif index1 == 3:
-            self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
+            self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_not_taken")
 
         index2 = self.proce2Combo.currentIndex()
         if index2 == 0:
@@ -70,9 +70,9 @@ class MainWindow(QtWidgets.QMainWindow):
         elif index2 == 1:
             self.procesador2.enable_branch_prediction(enabled=False)
         elif index2 == 2:
-            self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
+            self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_not_taken")
         elif index2 == 3:
-            self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
+            self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_not_taken")
 
     def setup_menu(self):
         """Configura la barra de menú con opciones de archivo"""
@@ -103,7 +103,7 @@ class MainWindow(QtWidgets.QMainWindow):
             caption="Cargar archivo de instrucciones",
             directory="",
             filter="Archivos de texto (*.txt);;Assembly RISCV (*.s);;Todos los archivos (*)",
-            initialFilter="Archivos de texto (*.txt)"
+            initialFilter="Assembly RISCV (*.s)"
         )
         
         if file_name:

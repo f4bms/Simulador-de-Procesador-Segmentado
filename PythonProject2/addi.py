@@ -9,7 +9,7 @@ class ADDI:
 
     def step1(self):
         print("empezando addi")
-        self.proce.regRegFile.data = self.proce.regFile.reg[self.rs1]
+        self.proce.regRegFile.data = self.proce.regFile.read(self.rs1)
         print("ADDI: ", self.proce.regRegFile.data)
 
     def step2(self):
@@ -19,7 +19,7 @@ class ADDI:
         print("ADDI:[EX]: ", self.proce.alu_reg.data)
 
     def step3(self):
-        self.proce.regFile.reg[self.rd] = self.proce.alu_reg.data
+        self.proce.regFile.write(self.rd, self.proce.alu_reg.data)
         print(f"ADDI:[WB] x{self.rd} <- {self.proce.alu_reg.data}")
 
     def execute(self):

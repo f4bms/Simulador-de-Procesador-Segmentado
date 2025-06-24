@@ -8,8 +8,8 @@ class AND:
 
     def step1(self):
         print("empezando and")
-        self.op1 = self.proce.regFile.reg[self.rs1]
-        self.op2 = self.proce.regFile.reg[self.rs2]
+        self.op1 = self.proce.regFile.read(self.rs1)
+        self.op2 = self.proce.regFile.read(self.rs2)
         print(f"AND: [ID] op1 = {self.op1}, op2 = {self.op2}")
 
     def step2(self):
@@ -17,7 +17,7 @@ class AND:
         print(f"AND: [EX] res = {self.res}")
 
     def step3(self):
-        self.proce.regFile.reg[self.rd] = self.res
+        self.proce.regFile.write(self.rd, self.res)
         print(f"AND: [WB] x{self.rd} <- {self.res}\nAND terminada")
 
     def execute(self):

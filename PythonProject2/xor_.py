@@ -8,8 +8,8 @@ class XOR:
 
     def step1(self):
         print("empezando xor")
-        self.op1 = self.proce.regFile.reg[self.rs1]
-        self.op2 = self.proce.regFile.reg[self.rs2]
+        self.op1 = self.proce.regFile.read(self.rs1)
+        self.op2 = self.proce.regFile.read(self.rs2)
         print(f"XOR: [ID] op1 = {self.op1}, op2 = {self.op2}")
 
     def step2(self):
@@ -17,7 +17,7 @@ class XOR:
         print(f"XOR: [EX] res = {self.res}")
 
     def step3(self):
-        self.proce.regFile.reg[self.rd] = self.res
+        self.proce.regFile.write(self.rd, self.res)
         print(f"XOR: [WB] x{self.rd} <- {self.res}\nXOR terminada")
 
     def execute(self):

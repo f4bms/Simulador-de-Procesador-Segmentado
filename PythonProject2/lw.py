@@ -10,7 +10,7 @@ class LW:
 
         def step1(self):
             print("empezando lw")
-            self.proce.regRegFile.data = self.proce.regFile.reg[self.rs1]
+            self.proce.regRegFile.data = self.proce.regFile.read(self.rs1)
             print("valor =",self.proce.regRegFile.data)
 
         def step2(self):
@@ -19,12 +19,12 @@ class LW:
 
         def step3(self):
             addr = self.proce.alu_reg.data
-            self.proce.reg_data.data = self.proce.dataMem.memory[addr]
+            self.proce.reg_data.data = self.proce.dataMem.read(addr)
             print("LW:dato =", self.proce.reg_data.data)
 
         def step4(self):
-            self.proce.regFile.reg[self.rd] = self.proce.reg_data.data
-            print("LW:resultado =", self.proce.regFile.reg[self.rd])
+            self.proce.regFile.write(self.rd, self.proce.reg_data.data)
+            print("LW:resultado =", self.proce.regFile.read(self.rd))
 
         def execute(self):
             if self.steps:

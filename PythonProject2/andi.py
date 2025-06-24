@@ -8,7 +8,7 @@ class ANDI:
 
     def step1(self):
         print("empezando andi")
-        self.op1 = self.proce.regFile.reg[self.rs1]
+        self.op1 = self.proce.regFile.read(self.rs1)
         print(f"ANDI: [ID] op1 = {self.op1}, imm = {self.imm}")
 
     def step2(self):
@@ -16,7 +16,7 @@ class ANDI:
         print(f"ANDI: [EX] res = {self.res}")
 
     def step3(self):
-        self.proce.regFile.reg[self.rd] = self.res
+        self.proce.regFile.write(self.rd, self.res)
         print(f"ANDI: [WB] x{self.rd} <- {self.res}\nANDI terminada")
 
     def execute(self):
