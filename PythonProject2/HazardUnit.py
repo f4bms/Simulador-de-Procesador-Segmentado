@@ -8,6 +8,7 @@ from and_ import *
 from or_ import *
 from xor_ import *
 from andi import *
+from NOP import *
 
 class HazardUnit:
     def __init__(self, processor):
@@ -33,56 +34,48 @@ class HazardUnit:
         ex_stage = self.processor.alu_reg.instr if self.processor.alu_reg.instr else None
         mem_stage = self.processor.reg_data.instr if self.processor.reg_data.instr else None
 
+        self.stall = False  # resetear cada ciclo
+
         # Riesgo RAW entre ID y EX
         if id_stage and ex_stage and hasattr(id_stage, 'rs1') and hasattr(ex_stage, 'rd'):
-            if id_stage.rs1 == ex_stage.rd:
-                if isinstance(ex_stage, LW):  # Load hazard necesita stall
+            # Check rs1
+            if id_stage.rs1 == ex_stage.rd and ex_stage.modifies_rd():
+                if hasattr(ex_stage, 'is_load') and ex_stage.is_load():
                     self.stall = True
                     self.stall_count += 1
-                else:  # Otras instrucciones pueden usar forwarding
-                    self.forward_EX = True
-                    self.forward_count += 1
 
-            if hasattr(id_stage, 'rs2') and id_stage.rs2 == ex_stage.rd:
-                if isinstance(ex_stage, LW):  # Load hazard necesita stall
+            # Check rs2 si existe
+            if hasattr(id_stage, 'rs2') and id_stage.rs2 == ex_stage.rd and ex_stage.modifies_rd():
+                if hasattr(ex_stage, 'is_load') and ex_stage.is_load():
                     self.stall = True
                     self.stall_count += 1
-                else:  # Otras instrucciones pueden usar forwarding
-                    self.forward_EX = True
-                    self.forward_count += 1
 
-        # Riesgo RAW entre ID y MEM
-        if id_stage and mem_stage and hasattr(id_stage, 'rs1') and hasattr(mem_stage, 'rd'):
-            if id_stage.rs1 == mem_stage.rd:
-                self.forward_MEM = True
-                self.forward_count += 1
-
-            if hasattr(id_stage, 'rs2') and id_stage.rs2 == mem_stage.rd:
-                self.forward_MEM = True
-                self.forward_count += 1
+        # También puedes extender chequeo con MEM stage si quieres
 
     def check_control_hazards(self):
         """Detecta y maneja riesgos de control (branch)"""
-        # Obtener la instrucción en etapa EX (branch)
         ex_stage = self.processor.alu_reg.instr if self.processor.alu_reg.instr else None
-        
-        # Si es una instrucción de salto (BEQ)
-        if ex_stage and isinstance(ex_stage, BEQ):
+        if ex_stage and hasattr(ex_stage, 'is_branch') and ex_stage.is_branch():
             self.flush = True
             self.flush_count += 1
 
     def resolve_hazards(self):
-        """Aplica las soluciones a los hazards detectados"""
         if self.stall:
-            # Insertar burbuja en el pipeline
-            self.processor.instr_reg.clear()
-            self.processor.regRegFile.clear()
-        
+            print("[STALL] Insertando burbuja por hazard de carga")
+
+            # Empujar pipeline hacia adelante
+            self.processor.reg_data.instr = self.processor.alu_reg.instr
+            self.processor.alu_reg.instr = self.processor.regRegFile.instr
+            self.processor.regRegFile.instr = NOP(self.processor)  # Inserta burbuja en EX
+
+            # Congelar IF y retroceder PC para no avanzar
+            self.processor.pc -= 1
+
         if self.flush:
-            # Flush de instrucciones después del branch
+            print("[FLUSH] Flush tras branch")
             self.processor.instr_reg.clear()
-        
-        # Resetear flags para el próximo ciclo
+
+        # Resetear flags para siguiente ciclo
         self.stall = False
         self.flush = False
         self.forward_EX = False

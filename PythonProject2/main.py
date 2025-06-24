@@ -22,9 +22,9 @@ class DualProcessor:
     def load_instructions(self):
         # Ejemplo de programa que causa hazards
         instructions = [
-            LW(1, 0, 100, self.proc_with_hazard),
+            LW(1, 10, 0, self.proc_with_hazard),
             ADD(2, 1, 1, self.proc_with_hazard),
-            SW(2, 0, 104, self.proc_with_hazard),
+            SW(2, 0, 30, self.proc_with_hazard),
             BEQ(1, 2, 8, self.proc_with_hazard),
             ADDI(3, 1, 5, self.proc_with_hazard),
             AND(4, 1, 2, self.proc_with_hazard),

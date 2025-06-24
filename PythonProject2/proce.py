@@ -42,7 +42,7 @@ class Procesador:
         """Aplica forwarding de datos cuando es necesario"""
         if not self.enable_hazards or not self.hazard_unit:
             return
-            
+
         id_stage = self.regRegFile.instr if self.regRegFile.instr else None
         ex_stage = self.alu_reg.instr if self.alu_reg.instr else None
         mem_stage = self.reg_data.instr if self.reg_data.instr else None
@@ -50,14 +50,14 @@ class Procesador:
         if self.hazard_unit.forward_EX and ex_stage and id_stage:
             if hasattr(id_stage, 'rs1') and hasattr(ex_stage, 'rd') and id_stage.rs1 == ex_stage.rd:
                 id_stage.op1 = ex_stage.result if hasattr(ex_stage, 'result') else ex_stage.proce.alu_reg.data
-            
+
             if hasattr(id_stage, 'rs2') and hasattr(ex_stage, 'rd') and id_stage.rs2 == ex_stage.rd:
                 id_stage.op2 = ex_stage.result if hasattr(ex_stage, 'result') else ex_stage.proce.alu_reg.data
 
         if self.hazard_unit.forward_MEM and mem_stage and id_stage:
             if hasattr(id_stage, 'rs1') and hasattr(mem_stage, 'rd') and id_stage.rs1 == mem_stage.rd:
                 id_stage.op1 = mem_stage.result if hasattr(mem_stage, 'result') else mem_stage.proce.reg_data.data
-            
+
             if hasattr(id_stage, 'rs2') and hasattr(mem_stage, 'rd') and id_stage.rs2 == mem_stage.rd:
                 id_stage.op2 = mem_stage.result if hasattr(mem_stage, 'result') else mem_stage.proce.reg_data.data
 
@@ -91,10 +91,8 @@ class Procesador:
             # EX
             if self.regRegFile.instr is not None:
                 start = True
-                # Aplicar forwarding antes de ejecutar
                 if self.enable_hazards and self.hazard_unit:
                     self.apply_forwarding()
-                
                 self.regRegFile.instr.execute()
                 self.pipel_stage[2] = "EX"
                 self.alu_reg.instr = self.regRegFile.instr
@@ -106,36 +104,40 @@ class Procesador:
             if self.instr_reg.instr is not None:
                 start = True
                 self.instr_reg.instr.execute()
-                self.pipel_stage[1] = f"Instr {self.pc-1}"
+                self.pipel_stage[1] = f"Instr {self.pc - 1}"
                 self.regRegFile.instr = self.instr_reg.instr
                 self.instr_reg.clear()
             else:
                 self.pipel_stage[1] = ""
 
             # IF
-            if self.pc < len(self.intrMem.memory):
-                start = True
-                self.pipel_stage[0] = f"Instr {self.pc}"
-                self.instr_reg.instr = self.intrMem.memory[self.pc]
-                self.pc += 1
+            if self.enable_hazards and self.hazard_unit and self.hazard_unit.stall:
+                print("[STALL] Congelando IF y PC")
+                # No avanzar PC ni actualizar instr_reg
             else:
-                self.pipel_stage[0] = ""
+                if self.pc < len(self.intrMem.memory):
+                    start = True
+                    self.pipel_stage[0] = f"Instr {self.pc}"
+                    self.instr_reg.instr = self.intrMem.memory[self.pc]
+                    self.pc += 1
+                else:
+                    self.pipel_stage[0] = ""
 
             # Verificar y manejar hazards
             if self.enable_hazards and self.hazard_unit:
                 self.hazard_unit.check_hazards()
                 self.hazard_unit.resolve_hazards()
-                
+
                 # Actualizar métricas
                 self.metrics['stalls'] = self.hazard_unit.stall_count
                 self.metrics['flushes'] = self.hazard_unit.flush_count
                 self.metrics['forwards'] = self.hazard_unit.forward_count
 
+            # Actualizar métricas CPI, IPC etc.
             completedTime = self.time
             if completedTime > 0:
                 self.metrics['cpi'] = self.cycles / max(1, self.instrRetired)
                 self.metrics['ipc'] = self.instrRetired / max(1, self.cycles)
-                clock_rate = self.cycles / (completedTime * 1e9)
             else:
                 self.metrics['cpi'] = self.metrics['ipc'] = 0.0
 
