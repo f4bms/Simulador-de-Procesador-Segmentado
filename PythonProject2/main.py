@@ -25,6 +25,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Configuración inicial
         self.interval = 1.0
         self.procesador = Procesador(intv=self.interval)
+        self.procesador2 = Procesador(intv=self.interval)
         
         # Configurar menú
         self.setup_menu()
@@ -35,6 +36,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exeStepsButton.clicked.connect(self.start_step_mode)
         self.stepButton.clicked.connect(self.execute_step)
         self.memoryButton.clicked.connect(self.show_memory)
+
+        self.proce1Combo.currentIndexChanged.connect(self.update_processor_config)
+        self.proce2Combo.currentIndexChanged.connect(self.update_processor_config)
         
         # Configurar selector de tiempo
         self.timeSelector.setValue(1.0)
@@ -45,7 +49,30 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_timer.timeout.connect(self.update_ui)
         self.update_timer.start(100)
         
+        self.update_processor_config()
         self.update_ui()
+
+    def update_processor_config(self):
+
+        index1 = self.proce1Combo.currentIndex()
+        if index1 == 0:
+            self.procesador.enable_branch_prediction(enabled=False)
+        elif index1 == 1:
+            self.procesador.enable_branch_prediction(enabled=False)
+        elif index1 == 2:
+            self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
+        elif index1 == 3:
+            self.procesador.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
+
+        index2 = self.proce2Combo.currentIndex()
+        if index2 == 0:
+            self.procesador2.enable_branch_prediction(enabled=False)
+        elif index2 == 1:
+            self.procesador2.enable_branch_prediction(enabled=False)
+        elif index2 == 2:
+            self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
+        elif index2 == 3:
+            self.procesador2.enable_branch_prediction(enabled=True, prediction_mode="always_taken")
 
     def setup_menu(self):
         """Configura la barra de menú con opciones de archivo"""
@@ -67,10 +94,6 @@ class MainWindow(QtWidgets.QMainWindow):
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
-    def load_sample_instructions(self):
-        """Carga instrucciones de ejemplo en el procesador"""
-        self.procesador.loadInstr(ANDI(6, 5, 0b1010, self.procesador))
-
 
     def load_instructions_from_file(self):
         """Abre un diálogo para seleccionar y cargar un archivo de instrucciones"""
@@ -79,7 +102,7 @@ class MainWindow(QtWidgets.QMainWindow):
             parent=self,
             caption="Cargar archivo de instrucciones",
             directory="",
-            filter="Archivos de texto (*.txt);;Todos los archivos (*)",
+            filter="Archivos de texto (*.txt);;Assembly RISCV (*.s);;Todos los archivos (*)",
             initialFilter="Archivos de texto (*.txt)"
         )
         
@@ -87,9 +110,13 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 # Limpiar instrucciones existentes
                 self.procesador.intrMem.memory.clear()
+                self.procesador2.intrMem.memory.clear()
                 self.procesador.pc = 0
+                self.procesador2.pc = 0
                 self.procesador.cycles = 0
+                self.procesador2.cycles = 0
                 self.procesador.instrRetired = 0
+                self.procesador2.instrRetired = 0
                 
                 # Leer y cargar instrucciones
                 with open(file_name, 'r') as file:
@@ -128,12 +155,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 rd = self.parse_register(parts[1].strip(','))
                 offset, rs1 = self.parse_memory_operand(parts[2])
                 self.procesador.loadInstr(LW(rd, rs1, offset, self.procesador))
+                self.procesador2.loadInstr(LW(rd, rs1, offset, self.procesador))
                 
             elif instr_type == "SW":
                 # Formato: SW rs2, offset(rs1)
                 rs2 = self.parse_register(parts[1].strip(','))
                 offset, rs1 = self.parse_memory_operand(parts[2])
                 self.procesador.loadInstr(SW(rs2, rs1, offset, self.procesador))
+                self.procesador2.loadInstr(SW(rs2, rs1, offset, self.procesador))
                 
             elif instr_type == "ADD":
                 # Formato: ADD rd, rs1, rs2
@@ -141,6 +170,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 rs1 = self.parse_register(parts[2].strip(','))
                 rs2 = self.parse_register(parts[3])
                 self.procesador.loadInstr(ADD(rd, rs1, rs2, self.procesador))
+                self.procesador2.loadInstr(ADD(rd, rs1, rs2, self.procesador))
                 
             elif instr_type == "ADDI":
                 # Formato: ADDI rd, rs1, imm
@@ -148,6 +178,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 rs1 = self.parse_register(parts[2].strip(','))
                 imm = self.parse_immediate(parts[3])
                 self.procesador.loadInstr(ADDI(rd, rs1, imm, self.procesador))
+                self.procesador2.loadInstr(ADDI(rd, rs1, imm, self.procesador))
                 
             elif instr_type == "SUB":
                 # Formato: SUB rd, rs1, rs2
@@ -155,6 +186,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 rs1 = self.parse_register(parts[2].strip(','))
                 rs2 = self.parse_register(parts[3])
                 self.procesador.loadInstr(SUB(rd, rs1, rs2, self.procesador))
+                self.procesador2.loadInstr(SUB(rd, rs1, rs2, self.procesador))
                 
             elif instr_type == "AND":
                 # Formato: AND rd, rs1, rs2
@@ -162,6 +194,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 rs1 = self.parse_register(parts[2].strip(','))
                 rs2 = self.parse_register(parts[3])
                 self.procesador.loadInstr(AND(rd, rs1, rs2, self.procesador))
+                self.procesador2.loadInstr(AND(rd, rs1, rs2, self.procesador))
                 
             elif instr_type == "ANDI":
                 # Formato: ANDI rd, rs1, imm
@@ -169,6 +202,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 rs1 = self.parse_register(parts[2].strip(','))
                 imm = self.parse_immediate(parts[3])
                 self.procesador.loadInstr(ANDI(rd, rs1, imm, self.procesador))
+                self.procesador2.loadInstr(ANDI(rd, rs1, imm, self.procesador))
                 
             elif instr_type == "OR":
                 # Formato: OR rd, rs1, rs2
@@ -176,6 +210,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 rs1 = self.parse_register(parts[2].strip(','))
                 rs2 = self.parse_register(parts[3])
                 self.procesador.loadInstr(OR(rd, rs1, rs2, self.procesador))
+                self.procesador2.loadInstr(OR(rd, rs1, rs2, self.procesador))
                 
             elif instr_type == "XOR":
                 # Formato: XOR rd, rs1, rs2
@@ -183,6 +218,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 rs1 = self.parse_register(parts[2].strip(','))
                 rs2 = self.parse_register(parts[3])
                 self.procesador.loadInstr(XOR(rd, rs1, rs2, self.procesador))
+                self.procesador2.loadInstr(XOR(rd, rs1, rs2, self.procesador))
                 
             elif instr_type == "BEQ":
                 # Formato: BEQ rs1, rs2, offset
@@ -190,6 +226,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 rs2 = self.parse_register(parts[2].strip(','))
                 offset = self.parse_immediate(parts[3])
                 self.procesador.loadInstr(BEQ(rs1, rs2, offset, self.procesador))
+                self.procesador2.loadInstr(BEQ(rs1, rs2, offset, self.procesador))
                 
             else:
                 raise ValueError(f"Tipo de instrucción no reconocido: {instr_type}")
@@ -226,30 +263,38 @@ class MainWindow(QtWidgets.QMainWindow):
         """Actualiza el tiempo por ciclo en modo temporizado"""
         self.interval = value
         self.procesador.cycle_time = value
+        self.procesador2.cycle_time = value
 
     def execute_complete(self):
         """Ejecuta todas las instrucciones de una vez"""
         self.procesador.set_execution_mode("complete")
+        self.procesador2.set_execution_mode("complete")
         self.procesador.start_execution()
+        self.procesador2.start_execution()
         self.update_ui()
 
     def execute_timed(self):
         """Ejecuta las instrucciones con temporización"""
         self.procesador.set_execution_mode("timed", self.interval)
+        self.procesador2.set_execution_mode("timed", self.interval)
         self.procesador.start_execution()
+        self.procesador2.start_execution()
         self.update_ui()
 
     def start_step_mode(self):
         """Inicia el modo paso a paso"""
         self.step_mode = True
         self.procesador.set_execution_mode("step")
+        self.procesador2.set_execution_mode("step")
         self.procesador.start_execution()
+        self.procesador2.start_execution()
         self.update_ui()
 
     def execute_step(self):
         """Ejecuta un paso en el modo paso a paso"""
         if self.step_mode:
             self.procesador.step()
+            self.procesador2.step()
         self.update_ui()
 
     def show_memory(self):

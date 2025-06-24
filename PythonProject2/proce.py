@@ -33,6 +33,22 @@ class Procesador:
         self.step_event = threading.Event()
         self.stop_event = threading.Event()
 
+        #Predicción de saltos
+        self.branch_prediction = False
+        self.branch_prediction_mode = "always_taken"
+        self.branch_history = {} #Para prediccion dinamica
+        self.mispredictions = 0
+        self.branch_total = 0
+
+    def enable_branch_prediction(self, enabled = True, prediction_mode = "always_taken"):
+        self.branch_prediction = enabled
+        self.branch_prediction_mode = prediction_mode
+    
+    def get_branch_stats(self):
+        if self.branch_total == 0:
+            return 0.0
+        return (self.mispredictions / self.branch_total) * 100
+
     def loadInstr(self, instr):
         self.intrMem.memory.append(instr)
     
@@ -50,7 +66,7 @@ class Procesador:
         if self.execution_mode == "complete":
             self.execute_complete()
         elif self.execution_mode == "step":
-            pass
+            self.step_event.clear()
         elif self.execution_mode == "timed":
             threading.Thread(target=self.execute_timed, daemon=True).start()
     
@@ -63,7 +79,13 @@ class Procesador:
             self.step_event.set()
     
     def execute_complete(self):
-        self.execute(complete=True)
+        while self.running and not self.stop_event.is_set():
+            start_time = time.time()
+            self.execute(complete=True)
+
+            elapsed = time.time() - start_time
+            sleep_time = max(0, 0.005 - elapsed)
+            time.sleep(sleep_time)
     
     def execute_timed(self):
         while self.running and not self.stop_event.is_set():
